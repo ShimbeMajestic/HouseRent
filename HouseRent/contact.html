@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="info.css">
+    <style>
+        /* Styles for the pop-up */
+        .popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid #6c63ff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .popup p {
+            margin: 0;
+        }
+
+        .popup button {
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .popup button:hover {
+            background-color: #5a52e6;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .contact-container {
+            padding: 20px;
+        }
+
+        .contact-form {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input.invalid,
+        .form-group textarea.invalid {
+            border-color: red;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .btn-submit {
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-submit:hover {
+            background-color: #5a52e6;
+        }
+
+        .hero {
+            position: relative;
+            height: 300px;
+            background-image: url('/Projects/Images/contact-hero.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-overlay">
+        <div class="hero-text">
+            <h1>Contact Us</h1>
+            <p>We’d love to hear from you!</p>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Information & Form -->
+<section class="contact-container">
+    <div class="contact-info">
+        <h2>Our Contact Information</h2>
+        <p>Feel free to reach out through the form below or use our provided contact details.</p>
+        <div class="info-cards">
+            <div class="info-card">
+                <i class="fas fa-phone-alt"></i>
+                <p>+123 456 7890</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-map-marker-alt"></i>
+                <p>123 Main Street, Example City</p>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-envelope"></i>
+                <p>info@example.com</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Form Section -->
+    <div class="contact-form">
+        <h2>Send Us A Message</h2>
+        <form id="contact-form" action="/Projects/HouseRent/submit_contact.php" method="POST" novalidate>
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Your Name" required>
+                <div class="error-message" id="name-error"></div>
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Your Email" required>
+                <div class="error-message" id="email-error"></div>
+            </div>
+            <div class="form-group">
+                <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                <div class="error-message" id="message-error"></div>
+            </div>
+            <button type="submit" class="btn-submit">Send Message</button>
+        </form>
+    </div>
+</section>
+
+<!-- Pop-up and Overlay -->
+<div class="overlay" id="overlay"></div>
+<div class="popup" id="popup">
+    <p id="popup-message"></p>
+    <button id="close-popup">OK</button>
+</div>
+
+<script>
+    const form = document.getElementById('contact-form');
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent form submission
+        const name = form.name.value.trim();
+        const email = form.email.value.trim();
+        const message = form.message.value.trim();
+
+        let isValid = true;
+
+        // Validate Name
+        if (name === '' || name.length < 3) {
+            showError('name-error', 'Please enter a valid name (at least 3 characters).');
+            isValid = false;
+        } else {
+            clearError('name-error');
+        }
+
+        // Validate Email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            showError('email-error', 'Please enter a valid email address.');
+            isValid = false;
+        } else {
+            clearError('email-error');
+        }
+
+        // Validate Message
+        if (message === '' || message.length < 10) {
+            showError('message-error', 'Message must be at least 10 characters long.');
+            isValid = false;
+        } else {
+            clearError('message-error');
+        }
+
+        if (isValid) {
+            const formData = new FormData(form);
+            fetch('/Projects/HouseRent/submit_contact.php', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                showPopup(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
+
+    function showError(id, message) {
+        document.getElementById(id).textContent = message;
+    }
+
+    function clearError(id) {
+        document.getElementById(id).textContent = '';
+    }
+
+    function showPopup(message) {
+        document.getElementById('popup-message').textContent = message;
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('popup').style.display = 'block';
+    }
+
+    document.getElementById('close-popup').onclick = function () {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('popup').style.display = 'none';
+        window.location.href = 'index.html'; // Redirect after closing the popup
+    };
+</script>
+
+<!-- Footer -->
+<footer style="text-align: center; padding: 20px; background-color: #f8f8f8; margin-top: 20px;">
+    <p>&copy; 2024 Example Company. All Rights Reserved.</p>
+</footer>
+
+</body>
+</html>
